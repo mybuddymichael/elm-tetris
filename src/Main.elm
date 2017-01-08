@@ -1,20 +1,48 @@
 module Main exposing (..)
 
+-- Theirs.
+
 import Html exposing (..)
-import Html.Attributes exposing (class)
-import Html.Events exposing (onClick)
-import Html exposing (beginnerProgram)
+import Html.Attributes exposing (class, style)
+import Random.Pcg exposing (Generator, Seed, initialSeed, int, sample, step)
+import Time exposing (Time, second)
+
+
+-- Ours.
+
+import Board exposing (..)
+
+
+-- # Randomness
+
+
+type alias Flags =
+    { randomSeed : Int
+    }
+
+
+intGenerator : Generator Int
+intGenerator =
+    int 1 10
+
+
+pieceTypeGenerator : Generator PieceType
+pieceTypeGenerator =
+    sample [ I, O, T, S, Z, J, L ]
+        |> Random.Pcg.map (Maybe.withDefault T)
+
 
 
 -- # Main
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    beginnerProgram
-        { model = model
+    programWithFlags
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
 
 
@@ -23,12 +51,31 @@ main =
 
 
 type alias Model =
-    Int
+    { score : Int
+    , board : List Block
+    , rand : Int
+    , seed : Seed
+    , piece : Piece
+    }
 
 
-model : Model
-model =
-    0
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    let
+        firstSeed =
+            initialSeed flags.randomSeed
+
+        ( rand, seed ) =
+            step intGenerator firstSeed
+    in
+        ( { score = 0
+          , board = []
+          , rand = rand
+          , seed = seed
+          , piece = freshPiece T
+          }
+        , Cmd.none
+        )
 
 
 
@@ -36,33 +83,73 @@ model =
 
 
 type Msg
-    = Inc
-    | Dec
+    = Tick Time
 
 
 
 -- # Update
 
 
-update : Msg -> Model -> Model
-update action model =
-    case action of
-        Inc ->
-            model + 1
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        Tick time ->
+            let
+                { piece, board } =
+                    model
 
-        Dec ->
-            model - 1
+                newPiece =
+                    move piece board Down
+            in
+                ( { model | piece = newPiece }, Cmd.none )
+
+
+
+-- # Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every second Tick
 
 
 
 -- # View
 
 
+columnStyle : Int -> Attribute msg
+columnStyle i =
+    style
+        [ ( "position", "absolute" )
+        , ( "left", toString <| i * 64 - 32 )
+        ]
+
+
 view : Model -> Html Msg
 view model =
-    div [ class "container" ]
-        [ h1 [] [ text "Counterlicious" ]
-        , div [] [ text "Count: ", text (toString model) ]
-        , button [ onClick Dec ] [ text "Decrement" ]
-        , button [ onClick Inc ] [ text "Increment" ]
+    div [ class "Game" ]
+        [ div [ class "Board" ]
+            <| List.map blockView
+            <| List.append model.board
+            <| rawBlockCoordinates model.piece
+          -- [ div [ class "Columns" ]
+          --     <| List.map (\i -> div [ class "Column", columnStyle i ] [])
+          --     <| List.range 1 5
+          -- ]
+        , div [ class "Score" ]
+            [ span [] [ text <| toString model.score ]
+            , div [ class "NextPiece" ] []
+            ]
         ]
+
+
+blockView : Block -> Html Msg
+blockView ( x, y ) =
+    div
+        [ class "Block"
+        , style
+            [ ( "left", toString <| x * 32 )
+            , ( "bottom", toString <| y * 32 )
+            ]
+        ]
+        []

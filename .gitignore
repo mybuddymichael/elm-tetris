@@ -1,4 +1,4 @@
-App/build
+public/built
 node_modules
 elm-stuff
 .DS_Store

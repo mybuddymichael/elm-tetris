@@ -1,0 +1,74 @@
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+div, span {
+  box-sizing: border-box;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  align-content: flex-start;
+
+  border: 0 solid black;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+#App {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100vw;
+  height: 100vh;
+
+  background-color: #101010;
+  color: #dbdee1;
+  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
+      Bitstream Vera Sans Mono, Courier New, monospace, serif;
+}
+
+.Game {
+  flex-direction: row;
+}
+
+.Board {
+  box-sizing: content-box;
+  padding: 0.0625rem;
+  width: 20rem;
+  height: 40rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  border: 2px solid #afb5bc;
+  overflow: hidden;
+}
+
+.Column {
+  background-color: #181818;
+  width: 2rem;
+  height: calc(100% - 2px);
+}
+
+.Block {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #101010;
+  background-color: #afb5bc;
+}
+
+.Score {
+  margin-left: 2rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.NextPiece {
+  width: 8rem;
+}
