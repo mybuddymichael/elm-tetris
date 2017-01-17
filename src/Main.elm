@@ -4,6 +4,7 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (class, style)
+import Keyboard exposing (KeyCode)
 import Random.Pcg exposing (Generator, Seed, initialSeed, int, sample, step)
 import Time exposing (Time, second)
 
@@ -53,7 +54,7 @@ main =
 type alias Model =
     { score : Int
     , board : List Block
-    , rand : Int
+    , rand : PieceType
     , seed : Seed
     , piece : Piece
     }
@@ -66,13 +67,13 @@ init flags =
             initialSeed flags.randomSeed
 
         ( rand, seed ) =
-            step intGenerator firstSeed
+            step pieceTypeGenerator firstSeed
     in
         ( { score = 0
           , board = []
           , rand = rand
           , seed = seed
-          , piece = freshPiece T
+          , piece = freshPiece rand
           }
         , Cmd.none
         )
@@ -84,6 +85,7 @@ init flags =
 
 type Msg
     = Tick Time
+    | KeyPress KeyCode
 
 
 
@@ -92,16 +94,50 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        Tick time ->
-            let
-                { piece, board } =
-                    model
+    let
+        { piece, board } =
+            model
+    in
+        case msg of
+            Tick time ->
+                let
+                    ( newPiece, newBoard ) =
+                        move piece board Down
+                in
+                    ( { model | piece = newPiece }, Cmd.none )
 
-                newPiece =
-                    move piece board Down
-            in
-                ( { model | piece = newPiece }, Cmd.none )
+            KeyPress keyCode ->
+                -- TODO: Dry.
+                if keyCode == 87 || keyCode == 38 then
+                    -- Up
+                    let
+                        ( newPiece, newBoard ) =
+                            move piece board Rotate
+                    in
+                        ( { model | piece = newPiece }, Cmd.none )
+                else if keyCode == 83 || keyCode == 40 then
+                    -- Down
+                    let
+                        ( newPiece, newBoard ) =
+                            move piece board Down
+                    in
+                        ( { model | piece = newPiece }, Cmd.none )
+                else if keyCode == 65 || keyCode == 37 then
+                    -- Left
+                    let
+                        ( newPiece, newBoard ) =
+                            move piece board Left
+                    in
+                        ( { model | piece = newPiece }, Cmd.none )
+                else if keyCode == 68 || keyCode == 39 then
+                    -- Right
+                    let
+                        ( newPiece, newBoard ) =
+                            move piece board Right
+                    in
+                        ( { model | piece = newPiece }, Cmd.none )
+                else
+                    ( model, Cmd.none )
 
 
 
@@ -110,7 +146,10 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every second Tick
+    Sub.batch
+        [ Time.every second Tick
+        , Keyboard.downs KeyPress
+        ]
 
 
 
