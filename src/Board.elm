@@ -37,11 +37,12 @@ type Rotation
     | ThreeQuarters
 
 
-type Movement
+type Key
     = Down
     | Left
     | Right
     | Rotate
+    | Other
 
 
 freshPiece : PieceType -> Piece
@@ -127,7 +128,7 @@ isRightmost piece =
     highestX piece == 9
 
 
-move : Piece -> Board -> Movement -> ( Piece, Board )
+move : Piece -> Board -> Key -> ( Piece, Board )
 move piece board direction =
     case direction of
         Down ->
@@ -142,7 +143,9 @@ move piece board direction =
                     hasConflicts newPiece board
             in
                 if conflicts || isBottomed piece then
-                    ( piece, board )
+                    ( (freshPiece T)
+                    , (List.concat [ board, (rawBlockCoordinates piece) ])
+                    )
                 else
                     ( newPiece, board )
 
@@ -204,6 +207,9 @@ move piece board direction =
                     ( piece, board )
                 else
                     ( { piece | rotation = newRotation }, board )
+
+        Other ->
+            ( piece, board )
 
 
 blocks : PieceType -> Rotation -> List Block

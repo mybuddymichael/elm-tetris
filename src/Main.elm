@@ -22,11 +22,6 @@ type alias Flags =
     }
 
 
-intGenerator : Generator Int
-intGenerator =
-    int 1 10
-
-
 pieceTypeGenerator : Generator PieceType
 pieceTypeGenerator =
     sample [ I, O, T, S, Z, J, L ]
@@ -102,42 +97,33 @@ update msg model =
             Tick time ->
                 let
                     ( newPiece, newBoard ) =
-                        move piece board Down
+                        move piece board Board.Down
                 in
-                    ( { model | piece = newPiece }, Cmd.none )
+                    ( { model | piece = newPiece, board = newBoard }, Cmd.none )
 
             KeyPress keyCode ->
                 -- TODO: Dry.
-                if keyCode == 87 || keyCode == 38 then
-                    -- Up
-                    let
-                        ( newPiece, newBoard ) =
-                            move piece board Rotate
-                    in
-                        ( { model | piece = newPiece }, Cmd.none )
-                else if keyCode == 83 || keyCode == 40 then
-                    -- Down
-                    let
-                        ( newPiece, newBoard ) =
-                            move piece board Down
-                    in
-                        ( { model | piece = newPiece }, Cmd.none )
-                else if keyCode == 65 || keyCode == 37 then
-                    -- Left
-                    let
-                        ( newPiece, newBoard ) =
-                            move piece board Left
-                    in
-                        ( { model | piece = newPiece }, Cmd.none )
-                else if keyCode == 68 || keyCode == 39 then
-                    -- Right
-                    let
-                        ( newPiece, newBoard ) =
-                            move piece board Right
-                    in
-                        ( { model | piece = newPiece }, Cmd.none )
-                else
-                    ( model, Cmd.none )
+                let
+                    key =
+                        if keyCode == 87 || keyCode == 38 then
+                            Rotate
+                        else if keyCode == 83 || keyCode == 40 then
+                            Down
+                        else if keyCode == 65 || keyCode == 37 then
+                            Left
+                        else if keyCode == 68 || keyCode == 39 then
+                            Right
+                        else
+                            Other
+                in
+                    if key == Rotate || key == Down || key == Left || key == Right then
+                        let
+                            ( newPiece, newBoard ) =
+                                move piece board key
+                        in
+                            ( { model | piece = newPiece, board = newBoard }, Cmd.none )
+                    else
+                        ( model, Cmd.none )
 
 
 
@@ -167,14 +153,10 @@ columnStyle i =
 view : Model -> Html Msg
 view model =
     div [ class "Game" ]
-        [ div [ class "Board" ]
-            <| List.map blockView
-            <| List.append model.board
-            <| rawBlockCoordinates model.piece
-          -- [ div [ class "Columns" ]
-          --     <| List.map (\i -> div [ class "Column", columnStyle i ] [])
-          --     <| List.range 1 5
-          -- ]
+        [ div [ class "Board" ] <|
+            List.map blockView <|
+                List.append model.board <|
+                    rawBlockCoordinates model.piece
         , div [ class "Score" ]
             [ span [] [ text <| toString model.score ]
             , div [ class "NextPiece" ] []
