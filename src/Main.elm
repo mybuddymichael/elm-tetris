@@ -142,14 +142,6 @@ subscriptions model =
 -- # View
 
 
-columnStyle : Int -> Attribute msg
-columnStyle i =
-    style
-        [ ( "position", "absolute" )
-        , ( "left", toString <| i * 64 - 32 )
-        ]
-
-
 view : Model -> Html Msg
 view model =
     div [ class "Game" ]
