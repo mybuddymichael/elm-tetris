@@ -80,6 +80,11 @@ hasConflicts piece board =
             |> (not << List.isEmpty)
 
 
+offBoard : Piece -> Bool
+offBoard piece =
+    lowestX piece < 0 || highestX piece > 9 || lowestY piece < 0 || highestY piece > 18
+
+
 lowestX : Piece -> Int
 lowestX piece =
     let
@@ -111,6 +116,17 @@ lowestY piece =
         List.map Tuple.second rawBlocks
             |> List.minimum
             |> Maybe.withDefault 0
+
+
+highestY : Piece -> Int
+highestY piece =
+    let
+        rawBlocks =
+            rawBlockCoordinates piece
+    in
+        List.map Tuple.second rawBlocks
+            |> List.maximum
+            |> Maybe.withDefault 18
 
 
 isBottomed : Piece -> Bool
@@ -203,7 +219,7 @@ move piece board direction =
                 low =
                     lowestY piece
             in
-                if isBottomed piece then
+                if isBottomed piece || offBoard piece || hasConflicts piece board then
                     ( piece, board )
                 else
                     ( { piece | rotation = newRotation }, board )
