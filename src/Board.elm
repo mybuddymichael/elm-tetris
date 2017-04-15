@@ -1,5 +1,7 @@
 module Board exposing (..)
 
+-- # Types
+
 
 type alias Board =
     List Block
@@ -53,6 +55,20 @@ freshPiece pieceType =
     }
 
 
+
+-- # Piece information.
+
+
+x : Piece -> Int
+x piece =
+    Tuple.first piece.location
+
+
+y : Piece -> Int
+y piece =
+    Tuple.second piece.location
+
+
 rawBlockCoordinates : Piece -> List Block
 rawBlockCoordinates { location, pieceType, rotation } =
     let
@@ -65,24 +81,26 @@ rawBlockCoordinates { location, pieceType, rotation } =
         List.map (\( blockX, blockY ) -> ( blockX + x, blockY + y )) pieceBlocks
 
 
+isOffBoard : Piece -> Bool
+isOffBoard piece =
+    lowestX piece < 0 || highestX piece > 9 || lowestY piece < 0 || highestY piece > 18
+
+
 hasConflicts : Piece -> Board -> Bool
 hasConflicts piece board =
     let
         rawPieceBlocks =
             rawBlockCoordinates piece
     in
-        List.map
+        (List.map
             (\block1 ->
                 List.filter (\block2 -> block2 == block1) board
             )
             rawPieceBlocks
             |> List.concat
             |> (not << List.isEmpty)
-
-
-offBoard : Piece -> Bool
-offBoard piece =
-    lowestX piece < 0 || highestX piece > 9 || lowestY piece < 0 || highestY piece > 18
+        )
+            || isOffBoard piece
 
 
 lowestX : Piece -> Int
@@ -134,98 +152,73 @@ isBottomed piece =
     lowestY piece == 0
 
 
-isLeftmost : Piece -> Bool
-isLeftmost piece =
-    lowestX piece == 0
+
+-- # Piece actions.
 
 
-isRightmost : Piece -> Bool
-isRightmost piece =
-    highestX piece == 9
+moveLeft : Piece -> Piece
+moveLeft piece =
+    { piece | location = ( (x piece) - 1, (y piece) ) }
 
 
-move : Piece -> Board -> Key -> ( Piece, Board )
-move piece board direction =
-    case direction of
-        Down ->
-            let
-                ( x, y ) =
-                    piece.location
+moveRight : Piece -> Piece
+moveRight piece =
+    { piece | location = ( (x piece) + 1, (y piece) ) }
 
-                newPiece =
-                    { piece | location = ( x, y - 1 ) }
 
-                conflicts =
-                    hasConflicts newPiece board
-            in
-                if conflicts || isBottomed piece then
-                    ( (freshPiece T)
-                    , (List.concat [ board, (rawBlockCoordinates piece) ])
-                    )
-                else
-                    ( newPiece, board )
+moveDown : Piece -> Piece
+moveDown piece =
+    { piece | location = ( (x piece), (y piece) - 1 ) }
 
-        Left ->
-            let
-                ( x, y ) =
-                    piece.location
 
-                newPiece =
-                    { piece | location = ( x - 1, y ) }
+rotate : Piece -> Piece
+rotate piece =
+    let
+        newRotation =
+            case piece.rotation of
+                Base ->
+                    Quarter
 
-                conflicts =
-                    hasConflicts newPiece board
-            in
-                if conflicts || isLeftmost piece then
-                    ( piece, board )
-                else
-                    ( newPiece, board )
+                Quarter ->
+                    Half
 
-        Right ->
-            let
-                ( x, y ) =
-                    piece.location
+                Half ->
+                    ThreeQuarters
 
-                newPiece =
-                    { piece | location = ( x + 1, y ) }
+                ThreeQuarters ->
+                    Base
+    in
+        { piece | rotation = newRotation }
 
-                conflicts =
-                    hasConflicts newPiece board
-            in
-                if conflicts || isRightmost piece then
-                    ( piece, board )
-                else
-                    ( newPiece, board )
 
-        Rotate ->
-            let
-                { rotation } =
+nextPiece : Piece -> Board -> Key -> Piece
+nextPiece piece board direction =
+    let
+        newPiece =
+            case direction of
+                Down ->
+                    moveDown piece
+
+                Left ->
+                    moveLeft piece
+
+                Right ->
+                    moveRight piece
+
+                Rotate ->
+                    rotate piece
+
+                Other ->
                     piece
+    in
+        if direction == Down && hasConflicts newPiece board then
+            piece
+        else
+            newPiece
 
-                newRotation =
-                    case rotation of
-                        Base ->
-                            Quarter
-
-                        Quarter ->
-                            Half
-
-                        Half ->
-                            ThreeQuarters
-
-                        ThreeQuarters ->
-                            Base
-
-                low =
-                    lowestY piece
-            in
-                if isBottomed piece || offBoard piece || hasConflicts piece board then
-                    ( piece, board )
-                else
-                    ( { piece | rotation = newRotation }, board )
-
-        Other ->
-            ( piece, board )
+transferPieceToBoard : Piece -> Board -> Board
+transferPieceToBoard piece board =
+    
 
 
 blocks : PieceType -> Rotation -> List Block

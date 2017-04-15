@@ -49,7 +49,6 @@ main =
 type alias Model =
     { score : Int
     , board : List Block
-    , rand : PieceType
     , seed : Seed
     , piece : Piece
     }
@@ -66,7 +65,6 @@ init flags =
     in
         ( { score = 0
           , board = []
-          , rand = rand
           , seed = seed
           , piece = freshPiece rand
           }
@@ -97,7 +95,7 @@ update msg model =
             Tick time ->
                 let
                     ( newPiece, newBoard ) =
-                        move piece board Board.Down
+                        nextPieceAndBoard piece board Board.Down
                 in
                     ( { model | piece = newPiece, board = newBoard }, Cmd.none )
 
@@ -119,7 +117,7 @@ update msg model =
                     if key == Rotate || key == Down || key == Left || key == Right then
                         let
                             ( newPiece, newBoard ) =
-                                move piece board key
+                                nextPieceAndBoard piece board key
                         in
                             ( { model | piece = newPiece, board = newBoard }, Cmd.none )
                     else
