@@ -237,6 +237,11 @@ transferPieceToBoard piece board =
     List.concat [ rawBlockCoordinates piece, board ]
 
 
+checkForPoints : Board -> ( Board, Int )
+checkForPoints board =
+    ( board, 0 )
+
+
 blocks : PieceType -> Rotation -> List Block
 blocks pieceType rotation =
     case pieceType of
