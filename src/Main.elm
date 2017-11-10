@@ -1,17 +1,11 @@
 module Main exposing (..)
 
--- Theirs.
-
+import Board exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, style)
 import Keyboard exposing (KeyCode)
-import Random.Pcg exposing (Generator, Seed, initialSeed, int, sample, step)
+import Random.Pcg exposing (Seed, initialSeed)
 import Time exposing (Time, second)
-
-
--- Ours.
-
-import Board exposing (..)
 
 
 -- # Randomness
@@ -20,12 +14,6 @@ import Board exposing (..)
 type alias Flags =
     { randomSeed : Int
     }
-
-
-pieceTypeGenerator : Generator PieceType
-pieceTypeGenerator =
-    sample [ I, O, T, S, Z, J, L ]
-        |> Random.Pcg.map (Maybe.withDefault T)
 
 
 
@@ -57,19 +45,19 @@ type alias Model =
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
-        firstSeed =
+        seed =
             initialSeed flags.randomSeed
 
-        ( rand, seed ) =
-            step pieceTypeGenerator firstSeed
+        ( firstPiece, newSeed ) =
+            freshPiece seed
     in
-        ( { score = 0
-          , board = []
-          , seed = seed
-          , piece = freshPiece rand
-          }
-        , Cmd.none
-        )
+    ( { score = 0
+      , board = []
+      , seed = newSeed
+      , piece = firstPiece
+      }
+    , Cmd.none
+    )
 
 
 
@@ -91,37 +79,61 @@ update msg model =
         { piece, board } =
             model
     in
-        case msg of
-            Tick time ->
+    case msg of
+        Tick time ->
+            let
+                newPiece =
+                    nextPiece piece board Down
+            in
+            if newPiece == piece then
                 let
-                    ( newPiece, newBoard ) =
-                        nextPieceAndBoard piece board Board.Down
+                    ( newPiece, newSeed ) =
+                        freshPiece model.seed
                 in
-                    ( { model | piece = newPiece, board = newBoard }, Cmd.none )
+                ( { model
+                    | piece = newPiece
+                    , seed = newSeed
+                    , board = transferPieceToBoard piece board
+                  }
+                , Cmd.none
+                )
+            else
+                ( { model | piece = newPiece }, Cmd.none )
 
-            KeyPress keyCode ->
-                -- TODO: Dry.
-                let
-                    key =
-                        if keyCode == 87 || keyCode == 38 then
-                            Rotate
-                        else if keyCode == 83 || keyCode == 40 then
-                            Down
-                        else if keyCode == 65 || keyCode == 37 then
-                            Left
-                        else if keyCode == 68 || keyCode == 39 then
-                            Right
-                        else
-                            Other
-                in
-                    if key == Rotate || key == Down || key == Left || key == Right then
-                        let
-                            ( newPiece, newBoard ) =
-                                nextPieceAndBoard piece board key
-                        in
-                            ( { model | piece = newPiece, board = newBoard }, Cmd.none )
+        KeyPress keyCode ->
+            -- TODO: Dry.
+            let
+                key =
+                    if keyCode == 87 || keyCode == 38 then
+                        Rotate
+                    else if keyCode == 83 || keyCode == 40 then
+                        Down
+                    else if keyCode == 65 || keyCode == 37 then
+                        Left
+                    else if keyCode == 68 || keyCode == 39 then
+                        Right
                     else
-                        ( model, Cmd.none )
+                        Other
+
+                newPiece =
+                    nextPiece piece board key
+            in
+            if newPiece == piece && key == Down then
+                let
+                    ( newPiece, newSeed ) =
+                        freshPiece model.seed
+                in
+                ( { model
+                    | piece = newPiece
+                    , seed = newSeed
+                    , board = transferPieceToBoard piece board
+                  }
+                , Cmd.none
+                )
+            else if newPiece == piece then
+                ( model, Cmd.none )
+            else
+                ( { model | piece = newPiece }, Cmd.none )
 
 
 

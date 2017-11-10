@@ -1,5 +1,8 @@
 module Board exposing (..)
 
+import Random.Pcg exposing (Generator, Seed, sample, step)
+
+
 -- # Types
 
 
@@ -47,12 +50,24 @@ type Key
     | Other
 
 
-freshPiece : PieceType -> Piece
-freshPiece pieceType =
-    { location = ( 3, 19 )
-    , rotation = Base
-    , pieceType = pieceType
-    }
+freshPiece : Seed -> ( Piece, Seed )
+freshPiece seed =
+    let
+        ( pieceType, newSeed ) =
+            step pieceTypeGenerator seed
+    in
+    ( { location = ( 3, 19 )
+      , rotation = Base
+      , pieceType = pieceType
+      }
+    , newSeed
+    )
+
+
+pieceTypeGenerator : Generator PieceType
+pieceTypeGenerator =
+    sample [ I, O, T, S, Z, J, L ]
+        |> Random.Pcg.map (Maybe.withDefault T)
 
 
 
@@ -78,12 +93,12 @@ rawBlockCoordinates { location, pieceType, rotation } =
         ( x, y ) =
             location
     in
-        List.map (\( blockX, blockY ) -> ( blockX + x, blockY + y )) pieceBlocks
+    List.map (\( blockX, blockY ) -> ( blockX + x, blockY + y )) pieceBlocks
 
 
 isOffBoard : Piece -> Bool
 isOffBoard piece =
-    lowestX piece < 0 || highestX piece > 9 || lowestY piece < 0 || highestY piece > 18
+    lowestX piece < 0 || highestX piece > 9 || lowestY piece < 0
 
 
 hasConflicts : Piece -> Board -> Bool
@@ -92,15 +107,15 @@ hasConflicts piece board =
         rawPieceBlocks =
             rawBlockCoordinates piece
     in
-        (List.map
-            (\block1 ->
-                List.filter (\block2 -> block2 == block1) board
-            )
-            rawPieceBlocks
-            |> List.concat
-            |> (not << List.isEmpty)
+    (List.map
+        (\block1 ->
+            List.filter (\block2 -> block2 == block1) board
         )
-            || isOffBoard piece
+        rawPieceBlocks
+        |> List.concat
+        |> (not << List.isEmpty)
+    )
+        || isOffBoard piece
 
 
 lowestX : Piece -> Int
@@ -109,9 +124,9 @@ lowestX piece =
         rawBlocks =
             rawBlockCoordinates piece
     in
-        List.map Tuple.first rawBlocks
-            |> List.minimum
-            |> Maybe.withDefault 0
+    List.map Tuple.first rawBlocks
+        |> List.minimum
+        |> Maybe.withDefault 0
 
 
 highestX : Piece -> Int
@@ -120,9 +135,9 @@ highestX piece =
         rawBlocks =
             rawBlockCoordinates piece
     in
-        List.map Tuple.first rawBlocks
-            |> List.maximum
-            |> Maybe.withDefault 9
+    List.map Tuple.first rawBlocks
+        |> List.maximum
+        |> Maybe.withDefault 9
 
 
 lowestY : Piece -> Int
@@ -131,9 +146,9 @@ lowestY piece =
         rawBlocks =
             rawBlockCoordinates piece
     in
-        List.map Tuple.second rawBlocks
-            |> List.minimum
-            |> Maybe.withDefault 0
+    List.map Tuple.second rawBlocks
+        |> List.minimum
+        |> Maybe.withDefault 0
 
 
 highestY : Piece -> Int
@@ -142,9 +157,9 @@ highestY piece =
         rawBlocks =
             rawBlockCoordinates piece
     in
-        List.map Tuple.second rawBlocks
-            |> List.maximum
-            |> Maybe.withDefault 18
+    List.map Tuple.second rawBlocks
+        |> List.maximum
+        |> Maybe.withDefault 18
 
 
 isBottomed : Piece -> Bool
@@ -158,17 +173,17 @@ isBottomed piece =
 
 moveLeft : Piece -> Piece
 moveLeft piece =
-    { piece | location = ( (x piece) - 1, (y piece) ) }
+    { piece | location = ( x piece - 1, y piece ) }
 
 
 moveRight : Piece -> Piece
 moveRight piece =
-    { piece | location = ( (x piece) + 1, (y piece) ) }
+    { piece | location = ( x piece + 1, y piece ) }
 
 
 moveDown : Piece -> Piece
 moveDown piece =
-    { piece | location = ( (x piece), (y piece) - 1 ) }
+    { piece | location = ( x piece, y piece - 1 ) }
 
 
 rotate : Piece -> Piece
@@ -188,7 +203,7 @@ rotate piece =
                 ThreeQuarters ->
                     Base
     in
-        { piece | rotation = newRotation }
+    { piece | rotation = newRotation }
 
 
 nextPiece : Piece -> Board -> Key -> Piece
@@ -211,14 +226,15 @@ nextPiece piece board direction =
                 Other ->
                     piece
     in
-        if direction == Down && hasConflicts newPiece board then
-            piece
-        else
-            newPiece
+    if hasConflicts newPiece board then
+        piece
+    else
+        newPiece
+
 
 transferPieceToBoard : Piece -> Board -> Board
 transferPieceToBoard piece board =
-    
+    List.concat [ rawBlockCoordinates piece, board ]
 
 
 blocks : PieceType -> Rotation -> List Block
