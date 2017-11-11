@@ -124,8 +124,6 @@ step model key =
           }
         , Cmd.none
         )
-    else if newPiece == piece then
-        ( model, Cmd.none )
     else
         ( { model | piece = newPiece }, Cmd.none )
 
