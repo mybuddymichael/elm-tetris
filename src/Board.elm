@@ -64,6 +64,10 @@ type Key
     | Other
 
 
+
+-- # Initialization.
+
+
 freshPiece : Seed -> ( Piece, Seed )
 freshPiece seed =
     let
@@ -251,8 +255,13 @@ transferPieceToBoard piece board =
     List.concat [ rawBlockCoordinates piece, board ]
 
 
+
+-- # Point calculation and board manipulation.
+
+
 checkForPoints : Board -> ( Board, Int )
 checkForPoints board =
+    -- FIXME: Check each row, and remove full rows and move all rows above it down one.
     ( board, 0 )
 
 
