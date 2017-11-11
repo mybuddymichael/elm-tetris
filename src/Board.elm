@@ -3,6 +3,20 @@ module Board exposing (..)
 import Random.Pcg exposing (Generator, Seed, sample, step)
 
 
+-- # Constants
+
+
+width : Int
+width =
+    10
+
+
+height : Int
+height =
+    20
+
+
+
 -- # Types
 
 
@@ -98,7 +112,7 @@ rawBlockCoordinates { location, pieceType, rotation } =
 
 isOffBoard : Piece -> Bool
 isOffBoard piece =
-    lowestX piece < 0 || highestX piece > 9 || lowestY piece < 0
+    lowestX piece < 0 || highestX piece > (width - 1) || lowestY piece < 0
 
 
 hasConflicts : Piece -> Board -> Bool
