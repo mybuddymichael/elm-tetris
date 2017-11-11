@@ -284,7 +284,7 @@ checkRowForPoint board rowIndex =
 
 removeRow : Board -> Int -> Board
 removeRow board rowIndex =
-    List.filter (\block -> Tuple.first block /= rowIndex) board
+    List.filter (\block -> Tuple.second block /= rowIndex) board
 
 
 moveRowsDownAboveIndex : Board -> Int -> Board
