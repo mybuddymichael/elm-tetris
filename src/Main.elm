@@ -75,40 +75,11 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        { piece, board } =
-            model
-    in
     case msg of
         Tick time ->
-            let
-                newPiece =
-                    nextPiece piece board Down
-            in
-            if newPiece == piece then
-                let
-                    ( newPiece, newSeed ) =
-                        freshPiece model.seed
-
-                    updatedBoard =
-                        transferPieceToBoard piece board
-
-                    ( scoredBoard, points ) =
-                        checkForPoints updatedBoard
-                in
-                ( { model
-                    | piece = newPiece
-                    , seed = newSeed
-                    , board = scoredBoard
-                    , score = model.score + points
-                  }
-                , Cmd.none
-                )
-            else
-                ( { model | piece = newPiece }, Cmd.none )
+            step model Down
 
         KeyPress keyCode ->
-            -- TODO: Dry.
             let
                 key =
                     if keyCode == 87 || keyCode == 38 then
@@ -121,33 +92,42 @@ update msg model =
                         Right
                     else
                         Other
-
-                newPiece =
-                    nextPiece piece board key
             in
-            if newPiece == piece && key == Down then
-                let
-                    ( newPiece, newSeed ) =
-                        freshPiece model.seed
+            step model key
 
-                    updatedBoard =
-                        transferPieceToBoard piece board
 
-                    ( scoredBoard, points ) =
-                        checkForPoints updatedBoard
-                in
-                ( { model
-                    | piece = newPiece
-                    , seed = newSeed
-                    , board = scoredBoard
-                    , score = model.score + points
-                  }
-                , Cmd.none
-                )
-            else if newPiece == piece then
-                ( model, Cmd.none )
-            else
-                ( { model | piece = newPiece }, Cmd.none )
+step : Model -> Key -> ( Model, Cmd Msg )
+step model key =
+    let
+        { piece, board, seed, score } =
+            model
+
+        newPiece =
+            nextPiece piece board key
+    in
+    if newPiece == piece && key == Down then
+        let
+            ( newPiece, newSeed ) =
+                freshPiece seed
+
+            updatedBoard =
+                transferPieceToBoard piece board
+
+            ( scoredBoard, points ) =
+                checkForPoints updatedBoard
+        in
+        ( { model
+            | piece = newPiece
+            , seed = newSeed
+            , board = scoredBoard
+            , score = score + points
+          }
+        , Cmd.none
+        )
+    else if newPiece == piece then
+        ( model, Cmd.none )
+    else
+        ( { model | piece = newPiece }, Cmd.none )
 
 
 
