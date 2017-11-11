@@ -265,8 +265,8 @@ checkForPoints board =
     ( board, 0 )
 
 
-checkRowForPoints : Board -> Int -> Board
-checkRowForPoints board rowIndex =
+checkRowForPoint : Board -> Int -> ( Board, Int )
+checkRowForPoint board rowIndex =
     let
         rowAtIndex : List Block
         rowAtIndex =
@@ -277,9 +277,9 @@ checkRowForPoints board rowIndex =
             List.length rowAtIndex == width
     in
     if isFullRow then
-        moveRowsDownAboveIndex (removeRow board rowIndex) rowIndex
+        ( moveRowsDownAboveIndex (removeRow board rowIndex) rowIndex, 1 )
     else
-        board
+        ( board, 0 )
 
 
 removeRow : Board -> Int -> Board
