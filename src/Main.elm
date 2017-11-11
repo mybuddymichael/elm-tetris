@@ -89,11 +89,18 @@ update msg model =
                 let
                     ( newPiece, newSeed ) =
                         freshPiece model.seed
+
+                    updatedBoard =
+                        transferPieceToBoard piece board
+
+                    ( scoredBoard, points ) =
+                        checkForPoints updatedBoard
                 in
                 ( { model
                     | piece = newPiece
                     , seed = newSeed
-                    , board = transferPieceToBoard piece board
+                    , board = scoredBoard
+                    , score = model.score + points
                   }
                 , Cmd.none
                 )
@@ -122,11 +129,18 @@ update msg model =
                 let
                     ( newPiece, newSeed ) =
                         freshPiece model.seed
+
+                    updatedBoard =
+                        transferPieceToBoard piece board
+
+                    ( scoredBoard, points ) =
+                        checkForPoints updatedBoard
                 in
                 ( { model
                     | piece = newPiece
                     , seed = newSeed
-                    , board = transferPieceToBoard piece board
+                    , board = scoredBoard
+                    , score = model.score + points
                   }
                 , Cmd.none
                 )
