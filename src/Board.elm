@@ -169,17 +169,6 @@ lowestY piece =
         |> Maybe.withDefault 0
 
 
-highestY : Piece -> Int
-highestY piece =
-    let
-        rawBlocks =
-            rawBlockCoordinates piece
-    in
-    List.map Tuple.second rawBlocks
-        |> List.maximum
-        |> Maybe.withDefault 18
-
-
 isBottomed : Piece -> Bool
 isBottomed piece =
     lowestY piece == 0
