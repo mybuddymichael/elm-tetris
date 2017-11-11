@@ -155,7 +155,7 @@ highestX piece =
     in
     List.map Tuple.first rawBlocks
         |> List.maximum
-        |> Maybe.withDefault 9
+        |> Maybe.withDefault (width - 1)
 
 
 lowestY : Piece -> Int
