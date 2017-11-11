@@ -102,19 +102,19 @@ step model key =
         { piece, board, seed, score } =
             model
 
-        newPiece =
+        steppedPiece =
             nextPiece piece board key
     in
-    if newPiece == piece && key == Down then
+    if steppedPiece == piece && key == Down then
         let
-            ( newPiece, newSeed ) =
-                freshPiece seed
-
             updatedBoard =
                 transferPieceToBoard piece board
 
             ( scoredBoard, points ) =
                 checkForPoints updatedBoard
+
+            ( newPiece, newSeed ) =
+                freshPiece seed
         in
         ( { model
             | piece = newPiece
@@ -125,7 +125,7 @@ step model key =
         , Cmd.none
         )
     else
-        ( { model | piece = newPiece }, Cmd.none )
+        ( { model | piece = steppedPiece }, Cmd.none )
 
 
 
