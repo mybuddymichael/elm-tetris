@@ -256,6 +256,46 @@ checkForPoints board =
     ( board, 0 )
 
 
+checkRowForPoints : Board -> Int -> Board
+checkRowForPoints board rowIndex =
+    let
+        rowAtIndex : List Block
+        rowAtIndex =
+            List.filter (\block -> Tuple.second block == rowIndex) board
+
+        isFullRow : Bool
+        isFullRow =
+            List.length rowAtIndex == width
+    in
+    if isFullRow then
+        moveRowsDownAboveIndex (removeRow board rowIndex) rowIndex
+    else
+        board
+
+
+removeRow : Board -> Int -> Board
+removeRow board rowIndex =
+    List.filter (\block -> Tuple.first block /= rowIndex) board
+
+
+moveRowsDownAboveIndex : Board -> Int -> Board
+moveRowsDownAboveIndex board rowIndex =
+    let
+        rowsAboveRowIndex : List Block
+        rowsAboveRowIndex =
+            List.filter (\block -> Tuple.second block > rowIndex) board
+
+        moveBlockDown : Block -> Block
+        moveBlockDown ( x, y ) =
+            ( x, y - 1 )
+    in
+    List.map moveBlockDown rowsAboveRowIndex
+
+
+
+-- # Piece structures.
+
+
 blocks : PieceType -> Rotation -> List Block
 blocks pieceType rotation =
     case pieceType of
