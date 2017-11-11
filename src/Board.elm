@@ -261,8 +261,29 @@ transferPieceToBoard piece board =
 
 checkForPoints : Board -> ( Board, Int )
 checkForPoints board =
-    -- FIXME: Check each row, and remove full rows and move all rows above it down one.
-    ( board, 0 )
+    checkBoardForPoint board 0
+
+
+checkBoardForPoint : Board -> Int -> ( Board, Int )
+checkBoardForPoint board totalPoints =
+    let
+        rowIndicies : List Int
+        rowIndicies =
+            List.range 0 (height - 1)
+
+        boardsAndPoints : List ( Board, Int )
+        boardsAndPoints =
+            List.map (checkRowForPoint board) rowIndicies
+
+        ( newBoard, point ) =
+            List.filter (\( block, point ) -> point == 1) boardsAndPoints
+                |> List.head
+                |> Maybe.withDefault ( board, 0 )
+    in
+    if point == 1 then
+        checkBoardForPoint newBoard <| totalPoints + point
+    else
+        ( newBoard, totalPoints )
 
 
 checkRowForPoint : Board -> Int -> ( Board, Int )
