@@ -24,19 +24,24 @@ type alias Board =
     List Block
 
 
+type alias Positioned a =
+    { a
+        | x : Int
+        , y : Int
+    }
+
+
 type alias Block =
-    ( Int, Int )
-
-
-type alias Location =
-    ( Int, Int )
+    Positioned
+        { color : Color
+        }
 
 
 type alias Piece =
-    { location : Location
-    , pieceType : PieceType
-    , rotation : Rotation
-    }
+    Positioned
+        { pieceType : PieceType
+        , rotation : Rotation
+        }
 
 
 type PieceType
@@ -47,6 +52,16 @@ type PieceType
     | Z
     | J
     | L
+
+
+type Color
+    = Cyan
+    | Blue
+    | Orange
+    | Yellow
+    | Green
+    | Purple
+    | Red
 
 
 type Rotation
@@ -74,7 +89,8 @@ freshPiece seed =
         ( pieceType, newSeed ) =
             step pieceTypeGenerator seed
     in
-    ( { location = ( 3, 19 )
+    ( { x = 3
+      , y = 19
       , rotation = Base
       , pieceType = pieceType
       }
@@ -92,26 +108,20 @@ pieceTypeGenerator =
 -- # Piece information.
 
 
-x : Piece -> Int
-x piece =
-    Tuple.first piece.location
-
-
-y : Piece -> Int
-y piece =
-    Tuple.second piece.location
-
-
-rawBlockCoordinates : Piece -> List Block
-rawBlockCoordinates { location, pieceType, rotation } =
+blocksFromPiece : Piece -> List Block
+blocksFromPiece { x, y, pieceType, rotation } =
     let
         pieceBlocks =
             blocks pieceType rotation
-
-        ( x, y ) =
-            location
     in
-    List.map (\( blockX, blockY ) -> ( blockX + x, blockY + y )) pieceBlocks
+    List.map
+        (\block ->
+            { block
+                | x = block.x + x
+                , y = block.y + y
+            }
+        )
+        pieceBlocks
 
 
 isOffBoard : Piece -> Bool
@@ -122,27 +132,38 @@ isOffBoard piece =
 hasConflicts : Piece -> Board -> Bool
 hasConflicts piece board =
     let
-        rawPieceBlocks =
-            rawBlockCoordinates piece
+        pieceBlocks : List Block
+        pieceBlocks =
+            blocksFromPiece piece
     in
     (List.map
-        (\block1 ->
-            List.filter (\block2 -> block2 == block1) board
+        (\pieceBlock ->
+            List.filter
+                (\boardBlock ->
+                    boardBlock.x == pieceBlock.x && boardBlock.y == pieceBlock.y
+                )
+                board
         )
-        rawPieceBlocks
+        pieceBlocks
         |> List.concat
         |> (not << List.isEmpty)
     )
         || isOffBoard piece
 
 
+
+-- findMatchingBlocks : Board -> Location -> List Location
+-- findMatchingBlocks board location =
+--     List.filter (\)
+
+
 lowestX : Piece -> Int
 lowestX piece =
     let
-        rawBlocks =
-            rawBlockCoordinates piece
+        pieceBlocks =
+            blocksFromPiece piece
     in
-    List.map Tuple.first rawBlocks
+    List.map .x pieceBlocks
         |> List.minimum
         |> Maybe.withDefault 0
 
@@ -150,10 +171,10 @@ lowestX piece =
 highestX : Piece -> Int
 highestX piece =
     let
-        rawBlocks =
-            rawBlockCoordinates piece
+        pieceBlocks =
+            blocksFromPiece piece
     in
-    List.map Tuple.first rawBlocks
+    List.map .x pieceBlocks
         |> List.maximum
         |> Maybe.withDefault (width - 1)
 
@@ -161,10 +182,10 @@ highestX piece =
 lowestY : Piece -> Int
 lowestY piece =
     let
-        rawBlocks =
-            rawBlockCoordinates piece
+        pieceBlocks =
+            blocksFromPiece piece
     in
-    List.map Tuple.second rawBlocks
+    List.map .y pieceBlocks
         |> List.minimum
         |> Maybe.withDefault 0
 
@@ -179,18 +200,18 @@ isBottomed piece =
 
 
 moveLeft : Piece -> Piece
-moveLeft piece =
-    { piece | location = ( x piece - 1, y piece ) }
+moveLeft ({ x } as piece) =
+    { piece | x = x - 1 }
 
 
 moveRight : Piece -> Piece
-moveRight piece =
-    { piece | location = ( x piece + 1, y piece ) }
+moveRight ({ x } as piece) =
+    { piece | x = x + 1 }
 
 
 moveDown : Piece -> Piece
-moveDown piece =
-    { piece | location = ( x piece, y piece - 1 ) }
+moveDown ({ y } as piece) =
+    { piece | y = y - 1 }
 
 
 rotate : Piece -> Piece
@@ -241,7 +262,7 @@ nextPiece piece board direction =
 
 transferPieceToBoard : Piece -> Board -> Board
 transferPieceToBoard piece board =
-    List.concat [ rawBlockCoordinates piece, board ]
+    List.concat [ blocksFromPiece piece, board ]
 
 
 
@@ -280,7 +301,7 @@ checkRowForPoint board rowIndex =
     let
         rowAtIndex : List Block
         rowAtIndex =
-            List.filter (\block -> Tuple.second block == rowIndex) board
+            List.filter (\block -> block.y == rowIndex) board
 
         isFullRow : Bool
         isFullRow =
@@ -294,7 +315,7 @@ checkRowForPoint board rowIndex =
 
 removeRow : Board -> Int -> Board
 removeRow board rowIndex =
-    List.filter (\block -> Tuple.second block /= rowIndex) board
+    List.filter (\block -> block.y /= rowIndex) board
 
 
 moveRowsDownAboveIndex : Board -> Int -> Board
@@ -302,186 +323,223 @@ moveRowsDownAboveIndex board rowIndex =
     let
         rowsAboveRowIndex : List Block
         rowsAboveRowIndex =
-            List.filter (\block -> Tuple.second block > rowIndex) board
+            List.filter (\block -> block.y > rowIndex) board
 
         moveBlockDown : Block -> Block
-        moveBlockDown ( x, y ) =
-            ( x, y - 1 )
+        moveBlockDown ({ y } as block) =
+            { block | y = y - 1 }
     in
     List.map moveBlockDown rowsAboveRowIndex
 
 
 
--- # Piece structures.
+-- # Piece colors and structures.
+
+
+color : PieceType -> Color
+color pieceType =
+    case pieceType of
+        I ->
+            Cyan
+
+        J ->
+            Blue
+
+        L ->
+            Orange
+
+        O ->
+            Yellow
+
+        S ->
+            Green
+
+        T ->
+            Purple
+
+        Z ->
+            Red
+
+
+blocksFromTuples : Color -> List ( Int, Int ) -> List Block
+blocksFromTuples color coords =
+    List.map (\( x, y ) -> { x = x, y = y, color = color }) coords
 
 
 blocks : PieceType -> Rotation -> List Block
 blocks pieceType rotation =
     case pieceType of
         I ->
-            case rotation of
-                Base ->
-                    -- ....
-                    -- oooo
-                    -- ....
-                    -- ....
-                    [ ( 0, 2 ), ( 1, 2 ), ( 2, 2 ), ( 3, 2 ) ]
+            blocksFromTuples Cyan <|
+                case rotation of
+                    Base ->
+                        -- ....
+                        -- oooo
+                        -- ....
+                        -- ....
+                        [ ( 0, 2 ), ( 1, 2 ), ( 2, 2 ), ( 3, 2 ) ]
 
-                Quarter ->
-                    -- ..o.
-                    -- ..o.
-                    -- ..o.
-                    -- ..o.
-                    [ ( 2, 0 ), ( 2, 1 ), ( 2, 2 ), ( 2, 3 ) ]
+                    Quarter ->
+                        -- ..o.
+                        -- ..o.
+                        -- ..o.
+                        -- ..o.
+                        [ ( 2, 0 ), ( 2, 1 ), ( 2, 2 ), ( 2, 3 ) ]
 
-                Half ->
-                    -- ....
-                    -- ....
-                    -- oooo
-                    -- ....
-                    [ ( 0, 1 ), ( 1, 1 ), ( 2, 1 ), ( 3, 1 ) ]
+                    Half ->
+                        -- ....
+                        -- ....
+                        -- oooo
+                        -- ....
+                        [ ( 0, 1 ), ( 1, 1 ), ( 2, 1 ), ( 3, 1 ) ]
 
-                ThreeQuarters ->
-                    -- .o..
-                    -- .o..
-                    -- .o..
-                    -- .o..
-                    [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 1, 3 ) ]
+                    ThreeQuarters ->
+                        -- .o..
+                        -- .o..
+                        -- .o..
+                        -- .o..
+                        [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 1, 3 ) ]
 
         O ->
-            case rotation of
-                _ ->
-                    -- .oo.
-                    -- .oo.
-                    -- ....
-                    [ ( 1, 1 ), ( 1, 2 ), ( 2, 1 ), ( 2, 2 ) ]
+            blocksFromTuples Yellow <|
+                case rotation of
+                    _ ->
+                        -- .oo.
+                        -- .oo.
+                        -- ....
+                        [ ( 1, 1 ), ( 1, 2 ), ( 2, 1 ), ( 2, 2 ) ]
 
         T ->
-            case rotation of
-                Base ->
-                    -- .o.
-                    -- ooo
-                    -- ...
-                    [ ( 0, 1 ), ( 1, 1 ), ( 1, 2 ), ( 2, 1 ) ]
+            blocksFromTuples Purple <|
+                case rotation of
+                    Base ->
+                        -- .o.
+                        -- ooo
+                        -- ...
+                        [ ( 0, 1 ), ( 1, 1 ), ( 1, 2 ), ( 2, 1 ) ]
 
-                Quarter ->
-                    -- .o.
-                    -- .oo
-                    -- .o.
-                    [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 2, 1 ) ]
+                    Quarter ->
+                        -- .o.
+                        -- .oo
+                        -- .o.
+                        [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 2, 1 ) ]
 
-                Half ->
-                    -- ...
-                    -- ooo
-                    -- .o.
-                    [ ( 0, 1 ), ( 1, 0 ), ( 1, 1 ), ( 2, 1 ) ]
+                    Half ->
+                        -- ...
+                        -- ooo
+                        -- .o.
+                        [ ( 0, 1 ), ( 1, 0 ), ( 1, 1 ), ( 2, 1 ) ]
 
-                ThreeQuarters ->
-                    -- .o.
-                    -- oo.
-                    -- .o.
-                    [ ( 0, 1 ), ( 1, 0 ), ( 1, 1 ), ( 1, 2 ) ]
+                    ThreeQuarters ->
+                        -- .o.
+                        -- oo.
+                        -- .o.
+                        [ ( 0, 1 ), ( 1, 0 ), ( 1, 1 ), ( 1, 2 ) ]
 
         S ->
-            case rotation of
-                Base ->
-                    -- .oo
-                    -- oo.
-                    -- ...
-                    [ ( 0, 1 ), ( 1, 1 ), ( 1, 2 ), ( 2, 2 ) ]
+            blocksFromTuples Green <|
+                case rotation of
+                    Base ->
+                        -- .oo
+                        -- oo.
+                        -- ...
+                        [ ( 0, 1 ), ( 1, 1 ), ( 1, 2 ), ( 2, 2 ) ]
 
-                Quarter ->
-                    -- .o.
-                    -- .oo
-                    -- ..o
-                    [ ( 1, 1 ), ( 1, 2 ), ( 2, 0 ), ( 2, 1 ) ]
+                    Quarter ->
+                        -- .o.
+                        -- .oo
+                        -- ..o
+                        [ ( 1, 1 ), ( 1, 2 ), ( 2, 0 ), ( 2, 1 ) ]
 
-                Half ->
-                    -- ...
-                    -- .oo
-                    -- oo.
-                    [ ( 0, 0 ), ( 1, 0 ), ( 1, 1 ), ( 2, 1 ) ]
+                    Half ->
+                        -- ...
+                        -- .oo
+                        -- oo.
+                        [ ( 0, 0 ), ( 1, 0 ), ( 1, 1 ), ( 2, 1 ) ]
 
-                ThreeQuarters ->
-                    -- o..
-                    -- oo.
-                    -- .o.
-                    [ ( 0, 1 ), ( 0, 2 ), ( 1, 0 ), ( 1, 1 ) ]
+                    ThreeQuarters ->
+                        -- o..
+                        -- oo.
+                        -- .o.
+                        [ ( 0, 1 ), ( 0, 2 ), ( 1, 0 ), ( 1, 1 ) ]
 
         Z ->
-            case rotation of
-                Base ->
-                    -- oo.
-                    -- .oo
-                    -- ...
-                    [ ( 0, 2 ), ( 1, 1 ), ( 1, 2 ), ( 2, 1 ) ]
+            blocksFromTuples Red <|
+                case rotation of
+                    Base ->
+                        -- oo.
+                        -- .oo
+                        -- ...
+                        [ ( 0, 2 ), ( 1, 1 ), ( 1, 2 ), ( 2, 1 ) ]
 
-                Quarter ->
-                    -- ..o
-                    -- .oo
-                    -- .o.
-                    [ ( 1, 0 ), ( 1, 1 ), ( 2, 1 ), ( 2, 2 ) ]
+                    Quarter ->
+                        -- ..o
+                        -- .oo
+                        -- .o.
+                        [ ( 1, 0 ), ( 1, 1 ), ( 2, 1 ), ( 2, 2 ) ]
 
-                Half ->
-                    -- ...
-                    -- oo.
-                    -- .oo
-                    [ ( 0, 1 ), ( 1, 0 ), ( 1, 1 ), ( 2, 0 ) ]
+                    Half ->
+                        -- ...
+                        -- oo.
+                        -- .oo
+                        [ ( 0, 1 ), ( 1, 0 ), ( 1, 1 ), ( 2, 0 ) ]
 
-                ThreeQuarters ->
-                    -- .o.
-                    -- oo.
-                    -- o..
-                    [ ( 0, 0 ), ( 0, 1 ), ( 1, 1 ), ( 1, 2 ) ]
+                    ThreeQuarters ->
+                        -- .o.
+                        -- oo.
+                        -- o..
+                        [ ( 0, 0 ), ( 0, 1 ), ( 1, 1 ), ( 1, 2 ) ]
 
         J ->
-            case rotation of
-                Base ->
-                    -- o..
-                    -- ooo
-                    -- ...
-                    [ ( 0, 1 ), ( 0, 2 ), ( 1, 1 ), ( 2, 1 ) ]
+            blocksFromTuples Blue <|
+                case rotation of
+                    Base ->
+                        -- o..
+                        -- ooo
+                        -- ...
+                        [ ( 0, 1 ), ( 0, 2 ), ( 1, 1 ), ( 2, 1 ) ]
 
-                Quarter ->
-                    -- .oo
-                    -- .o.
-                    -- .o.
-                    [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 2, 2 ) ]
+                    Quarter ->
+                        -- .oo
+                        -- .o.
+                        -- .o.
+                        [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 2, 2 ) ]
 
-                Half ->
-                    -- ...
-                    -- ooo
-                    -- ..o
-                    [ ( 0, 1 ), ( 1, 1 ), ( 2, 0 ), ( 2, 1 ) ]
+                    Half ->
+                        -- ...
+                        -- ooo
+                        -- ..o
+                        [ ( 0, 1 ), ( 1, 1 ), ( 2, 0 ), ( 2, 1 ) ]
 
-                ThreeQuarters ->
-                    -- .o.
-                    -- .o.
-                    -- oo.
-                    [ ( 0, 0 ), ( 1, 0 ), ( 1, 1 ), ( 1, 2 ) ]
+                    ThreeQuarters ->
+                        -- .o.
+                        -- .o.
+                        -- oo.
+                        [ ( 0, 0 ), ( 1, 0 ), ( 1, 1 ), ( 1, 2 ) ]
 
         L ->
-            case rotation of
-                Base ->
-                    -- ..o
-                    -- ooo
-                    -- ...
-                    [ ( 0, 1 ), ( 1, 1 ), ( 2, 1 ), ( 2, 2 ) ]
+            blocksFromTuples Orange <|
+                case rotation of
+                    Base ->
+                        -- ..o
+                        -- ooo
+                        -- ...
+                        [ ( 0, 1 ), ( 1, 1 ), ( 2, 1 ), ( 2, 2 ) ]
 
-                Quarter ->
-                    -- .o.
-                    -- .o.
-                    -- .oo
-                    [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 2, 0 ) ]
+                    Quarter ->
+                        -- .o.
+                        -- .o.
+                        -- .oo
+                        [ ( 1, 0 ), ( 1, 1 ), ( 1, 2 ), ( 2, 0 ) ]
 
-                Half ->
-                    -- ...
-                    -- ooo
-                    -- o..
-                    [ ( 0, 0 ), ( 0, 1 ), ( 1, 1 ), ( 2, 1 ) ]
+                    Half ->
+                        -- ...
+                        -- ooo
+                        -- o..
+                        [ ( 0, 0 ), ( 0, 1 ), ( 1, 1 ), ( 2, 1 ) ]
 
-                ThreeQuarters ->
-                    -- oo.
-                    -- .o.
-                    -- .o.
-                    [ ( 0, 2 ), ( 1, 0 ), ( 1, 1 ), ( 1, 2 ) ]
+                    ThreeQuarters ->
+                        -- oo.
+                        -- .o.
+                        -- .o.
+                        [ ( 0, 2 ), ( 1, 0 ), ( 1, 1 ), ( 1, 2 ) ]

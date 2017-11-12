@@ -1,10 +1,10 @@
-
 body {
   margin: 0;
   padding: 0;
 }
 
-div, span {
+div,
+span {
   box-sizing: border-box;
   position: relative;
 
@@ -28,10 +28,9 @@ div, span {
   width: 100vw;
   height: 100vh;
 
-  background-color: #101010;
-  color: #dbdee1;
-  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-      Bitstream Vera Sans Mono, Courier New, monospace, serif;
+  background-color: #fff;
+  color: rgba(19, 41, 63, 0.8);
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .Game {
@@ -39,28 +38,50 @@ div, span {
 }
 
 .Board {
-  box-sizing: content-box;
-  padding: 0.0625rem;
   width: 20rem;
   height: 40rem;
   flex-direction: row;
   flex-wrap: wrap;
-  border: 2px solid #afb5bc;
   overflow: hidden;
 }
 
-.Column {
-  background-color: #181818;
-  width: 2rem;
-  height: calc(100% - 2px);
-}
-
 .Block {
-  position: absolute;
   width: 2rem;
   height: 2rem;
-  border: 1px solid #101010;
-  background-color: #afb5bc;
+  border: 1px solid #fff;
+  background-color: rgba(249, 250, 251, 1);
+}
+
+.Block--piece {
+  position: absolute;
+  background-color: black;
+}
+
+.Block--cyan {
+  background: #53bcef;
+}
+
+.Block--blue {
+  background: #2d83c9;
+}
+
+.Block--orange {
+  background: #ff6300;
+}
+
+.Block--yellow {
+  background: #ffdd00;
+}
+
+.Block--green {
+  background: #55a734;
+}
+.Block--purple {
+  background: #621296;
+}
+
+.Block--red {
+  background: #c91a1a;
 }
 
 .Score {

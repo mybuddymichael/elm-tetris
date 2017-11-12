@@ -146,11 +146,18 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
+    let
+        emptyBlocks =
+            List.map emptyBlock (List.range 1 (Board.width * Board.height))
+    in
     div [ class "Game" ]
         [ div [ class "Board" ] <|
-            List.map blockView <|
-                List.append model.board <|
-                    rawBlockCoordinates model.piece
+            List.append emptyBlocks <|
+                List.map
+                    blockView
+                <|
+                    List.append model.board <|
+                        blocksFromPiece model.piece
         , div [ class "Score" ]
             [ span [] [ text <| toString model.score ]
             , div [ class "NextPiece" ] []
@@ -159,12 +166,17 @@ view model =
 
 
 blockView : Block -> Html Msg
-blockView ( x, y ) =
+blockView { x, y, color } =
     div
-        [ class "Block"
+        [ class <| "Block Block--piece Block--" ++ (toString color |> String.toLower)
         , style
             [ ( "left", toString <| x * 32 )
             , ( "bottom", toString <| y * 32 )
             ]
         ]
         []
+
+
+emptyBlock : a -> Html Msg
+emptyBlock _ =
+    div [ class "Block Block--empty" ] []
