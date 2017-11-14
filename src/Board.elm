@@ -151,12 +151,6 @@ hasConflicts piece board =
         || isOffBoard piece
 
 
-
--- findMatchingBlocks : Board -> Location -> List Location
--- findMatchingBlocks board location =
---     List.filter (\)
-
-
 lowestX : Piece -> Int
 lowestX piece =
     let
