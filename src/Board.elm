@@ -309,15 +309,22 @@ removeRow board rowIndex =
 moveRowsDownAboveIndex : Board -> Int -> Board
 moveRowsDownAboveIndex board rowIndex =
     let
-        rowsAboveRowIndex : List Block
-        rowsAboveRowIndex =
-            List.filter (\block -> block.y > rowIndex) board
+        isAboveIndex : Block -> Bool
+        isAboveIndex block =
+            block.y > rowIndex
 
         moveBlockDown : Block -> Block
         moveBlockDown ({ y } as block) =
             { block | y = y - 1 }
+
+        moveBlockDownIfAboveIndex : Block -> Block
+        moveBlockDownIfAboveIndex block =
+            if isAboveIndex block then
+                moveBlockDown block
+            else
+                block
     in
-    List.map moveBlockDown rowsAboveRowIndex
+    List.map moveBlockDownIfAboveIndex board
 
 
 
