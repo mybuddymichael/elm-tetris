@@ -85,9 +85,23 @@ span {
 }
 
 .Score {
-  margin-left: 2rem;
-  font-size: 1.5rem;
-  line-height: 2rem;
+  margin-top: 6rem;
+  margin-left: 4rem;
+}
+
+.Score-Label {
+  font-size: 0.875rem;
+  letter-spacing: 0.25rem;
+  text-transform: uppercase;
+}
+
+.Score-Value {
+  margin-top: 0.75rem;
+  color: rgba(19, 41, 63, 0.8);
+  font-size: 2.5rem;
+  font-weight: bold;
+  line-height: 2.5rem;
+  letter-spacing: 0;
 }
 
 .NextPiece {

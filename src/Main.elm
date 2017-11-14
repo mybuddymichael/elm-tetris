@@ -165,7 +165,8 @@ view model =
                     List.append model.board <|
                         blocksFromPiece model.currentPiece
         , div [ class "Score" ]
-            [ span [] [ text <| toString model.score ]
+            [ span [ class "Score-Label" ] [ text "Score" ]
+            , span [ class "Score-Value" ] [ text <| toString model.score ]
             , div [ class "NextPiece" ] []
             ]
         ]
