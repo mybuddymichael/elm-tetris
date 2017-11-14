@@ -271,33 +271,21 @@ transferPieceToBoard piece board =
 
 checkForPoints : Board -> ( Board, Int )
 checkForPoints board =
-    checkBoardForPoint board 0
+    checkBoardForPoint board
 
 
-checkBoardForPoint : Board -> Int -> ( Board, Int )
-checkBoardForPoint board totalPoints =
+checkBoardForPoint : Board -> ( Board, Int )
+checkBoardForPoint board =
     let
         rowIndicies : List Int
         rowIndicies =
             List.range 0 (height - 1)
-
-        boardsAndPoints : List ( Board, Int )
-        boardsAndPoints =
-            List.map (checkRowForPoint board) rowIndicies
-
-        ( newBoard, point ) =
-            List.filter (\( block, point ) -> point == 1) boardsAndPoints
-                |> List.head
-                |> Maybe.withDefault ( board, 0 )
     in
-    if point == 1 then
-        checkBoardForPoint newBoard <| totalPoints + point
-    else
-        ( newBoard, totalPoints )
+    List.foldr checkRowForPoint ( board, 0 ) rowIndicies
 
 
-checkRowForPoint : Board -> Int -> ( Board, Int )
-checkRowForPoint board rowIndex =
+checkRowForPoint : Int -> ( Board, Int ) -> ( Board, Int )
+checkRowForPoint rowIndex ( board, pointCount ) =
     let
         rowAtIndex : List Block
         rowAtIndex =
@@ -308,9 +296,9 @@ checkRowForPoint board rowIndex =
             List.length rowAtIndex == width
     in
     if isFullRow then
-        ( moveRowsDownAboveIndex (removeRow board rowIndex) rowIndex, 1 )
+        ( moveRowsDownAboveIndex (removeRow board rowIndex) rowIndex, pointCount + 1 )
     else
-        ( board, 0 )
+        ( board, pointCount )
 
 
 removeRow : Board -> Int -> Board
