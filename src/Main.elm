@@ -38,7 +38,8 @@ type alias Model =
     { score : Int
     , board : List Block
     , seed : Seed
-    , piece : Piece
+    , currentPiece : Piece
+    , nextPiece : Piece
     }
 
 
@@ -48,13 +49,17 @@ init flags =
         seed =
             initialSeed flags.randomSeed
 
-        ( firstPiece, newSeed ) =
+        ( currentPiece, seed2 ) =
             freshPiece seed
+
+        ( nextPiece, seed3 ) =
+            freshPiece seed2
     in
     ( { score = 0
       , board = []
-      , seed = newSeed
-      , piece = firstPiece
+      , seed = seed3
+      , currentPiece = currentPiece
+      , nextPiece = nextPiece
       }
     , Cmd.none
     )
@@ -99,25 +104,26 @@ update msg model =
 step : Model -> Key -> ( Model, Cmd Msg )
 step model key =
     let
-        { piece, board, seed, score } =
+        { currentPiece, board, seed, score } =
             model
 
         steppedPiece =
-            nextPiece piece board key
+            nextPiece currentPiece board key
     in
-    if steppedPiece == piece && key == Down then
+    if steppedPiece == currentPiece && key == Down then
         let
             updatedBoard =
-                transferPieceToBoard piece board
+                transferPieceToBoard currentPiece board
 
             ( scoredBoard, points ) =
                 checkForPoints updatedBoard
 
-            ( newPiece, newSeed ) =
+            ( nextPiece, newSeed ) =
                 freshPiece seed
         in
         ( { model
-            | piece = newPiece
+            | currentPiece = model.nextPiece
+            , nextPiece = nextPiece
             , seed = newSeed
             , board = scoredBoard
             , score = score + points
@@ -125,7 +131,7 @@ step model key =
         , Cmd.none
         )
     else
-        ( { model | piece = steppedPiece }, Cmd.none )
+        ( { model | currentPiece = steppedPiece }, Cmd.none )
 
 
 
@@ -157,7 +163,7 @@ view model =
                     blockView
                 <|
                     List.append model.board <|
-                        blocksFromPiece model.piece
+                        blocksFromPiece model.currentPiece
         , div [ class "Score" ]
             [ span [] [ text <| toString model.score ]
             , div [ class "NextPiece" ] []
