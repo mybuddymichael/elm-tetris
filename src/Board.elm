@@ -135,14 +135,14 @@ hasConflicts piece board =
         pieceBlocks : List Block
         pieceBlocks =
             blocksFromPiece piece
+
+        blocksConflict : Block -> Block -> Bool
+        blocksConflict block1 block2 =
+            block1.x == block2.x && block1.y == block2.y
     in
     (List.map
         (\pieceBlock ->
-            List.filter
-                (\boardBlock ->
-                    boardBlock.x == pieceBlock.x && boardBlock.y == pieceBlock.y
-                )
-                board
+            List.filter (blocksConflict pieceBlock) board
         )
         pieceBlocks
         |> List.concat
