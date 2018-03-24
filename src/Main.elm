@@ -153,21 +153,30 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     let
-        emptyBlocks =
-            List.map emptyBlock (List.range 1 (Board.width * Board.height))
+        emptyBlockViews =
+            List.map emptyBlockView (List.range 1 (Board.width * Board.height))
+
+        boardAndPieceBlocks =
+            List.append model.board <|
+                blocksFromPiece model.currentPiece
     in
     div [ class "Game" ]
         [ div [ class "Board" ] <|
-            List.append emptyBlocks <|
-                List.map
-                    blockView
-                <|
-                    List.append model.board <|
-                        blocksFromPiece model.currentPiece
-        , div [ class "Score" ]
-            [ span [ class "Score-Label" ] [ text "Score" ]
-            , span [ class "Score-Value" ] [ text <| toString model.score ]
-            , div [ class "NextPiece" ] []
+            List.append emptyBlockViews <|
+                List.map blockView boardAndPieceBlocks
+        , div [ class "ScoreAndNextPiece" ]
+            [ div [ class "Score" ]
+                [ span [ class "Score-Label" ] [ text "Score" ]
+                , span [ class "Score-Value" ] [ text <| toString model.score ]
+                ]
+            , div [ class "NextPiece" ]
+                [ span [ class "NextPiece-Label" ] [ text "Next" ]
+                , div [ class "NextPiece-Piece" ] <|
+                    List.map
+                        nextBlockView
+                    <|
+                        blocks model.nextPiece.pieceType Half
+                ]
             ]
         ]
 
@@ -184,6 +193,18 @@ blockView { x, y, color } =
         []
 
 
-emptyBlock : a -> Html Msg
-emptyBlock _ =
+nextBlockView : Block -> Html Msg
+nextBlockView { x, y, color } =
+    div
+        [ class <| "Block Block--piece Block--nextPiece Block--" ++ (toString color |> String.toLower)
+        , style
+            [ ( "left", toString <| x * 16 )
+            , ( "bottom", toString <| y * 16 )
+            ]
+        ]
+        []
+
+
+emptyBlockView : a -> Html Msg
+emptyBlockView _ =
     div [ class "Block Block--empty" ] []

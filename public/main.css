@@ -54,7 +54,11 @@ span {
 
 .Block--piece {
   position: absolute;
-  background-color: black;
+}
+
+.Block--nextPiece {
+  width: 1rem;
+  height: 1rem;
 }
 
 .Block--cyan {
@@ -84,12 +88,13 @@ span {
   background: #c91a1a;
 }
 
-.Score {
+.ScoreAndNextPiece {
   margin-top: 6rem;
   margin-left: 4rem;
 }
 
-.Score-Label {
+.Score-Label,
+.NextPiece-Label {
   font-size: 0.875rem;
   letter-spacing: 0.25rem;
   text-transform: uppercase;
@@ -105,5 +110,11 @@ span {
 }
 
 .NextPiece {
-  width: 8rem;
+  margin-top: 3.75rem;
+}
+
+.NextPiece-Piece {
+  width: 4rem;
+  height: 4rem;
+  margin-top: 1rem;
 }
