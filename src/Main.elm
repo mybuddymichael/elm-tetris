@@ -175,7 +175,7 @@ view model =
                     List.map
                         nextBlockView
                     <|
-                        blocks model.nextPiece.pieceType Half
+                        blocks model.nextPiece.pieceType Base
                 ]
             ]
         ]
